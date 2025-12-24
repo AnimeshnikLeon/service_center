@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Заявки{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h2 class="page-title">Заявки</h2>
+
+    {% if role in ["Заказчик", "Оператор", "Менеджер", "Менеджер по качеству"] %}
+    <a href="/ui/requests/new" class="btn btn-primary">Новая заявка</a>
+    {% endif %}
+</header>
+
+<form method="get" action="/ui/requests" class="form-card" style="margin-bottom: 16px;">
+    <div class="filters">
+        <div class="form-row" style="margin: 0;">
+            <label for="q">Поиск</label>
+            <input id="q" name="q" type="text" value="{{ filters.q or '' }}" placeholder="ID или текст проблемы">
+        </div>
+
+        <div class="form-row" style="margin: 0;">
+            <label for="status_id">Статус</label>
+            <select id="status_id" name="status_id">
+                <option value="">— любой —</option>
+                {% for s in statuses %}
+                <option value="{{ s.id }}" {% if filters.status_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row" style="margin: 0;">
+            <label for="equipment_type_id">Тип техники</label>
+            <select id="equipment_type_id" name="equipment_type_id">
+                <option value="">— любой —</option>
+                {% for e in equipment_types %}
+                <option value="{{ e.id }}" {% if filters.equipment_type_id == e.id %}selected{% endif %}>{{ e.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row" style="margin: 0;">
+            <label for="issue_type_id">Тип неисправности</label>
+            <select id="issue_type_id" name="issue_type_id">
+                <option value="">— любой —</option>
+                {% for it in issue_types %}
+                <option value="{{ it.id }}" {% if filters.issue_type_id == it.id %}selected{% endif %}>{{ it.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row" style="margin: 0;">
+            <button type="submit" class="btn btn-secondary">Применить</button>
+        </div>
+    </div>
+</form>
+
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Дата</th>
+        <th>Тип техники</th>
+        <th>Модель</th>
+        <th>Тип неисправности</th>
+        <th>Статус</th>
+        <th>Исполнитель (мастер)</th>
+        <th>Заказчик</th>
+        <th class="column-actions">Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for r in requests %}
+    <tr>
+        <td class="cell-centered">{{ r.id }}</td>
+        <td>{{ r.start_date }}</td>
+        <td>{{ r.equipment_model.equipment_type.name }}</td>
+        <td>{{ r.equipment_model.name }}</td>
+        <td>{{ r.issue_type.name }}</td>
+        <td>{{ r.status.name }}</td>
+        <td>{% if r.master %}{{ r.master.fio }}{% else %}—{% endif %}</td>
+        <td>{{ r.client.fio }}</td>
+        <td class="table-actions">
+            <a href="/ui/requests/{{ r.id }}" class="link-action">Открыть</a>
+            {% if can_edit_request(user, r) %}
+            <a href="/ui/requests/{{ r.id }}/edit" class="link-action">Редактировать</a>
+            {% endif %}
+            {% if can_delete_request(user) %}
+            <form method="post"
+                  action="/ui/requests/{{ r.id }}/delete"
+                  class="inline-form"
+                  onsubmit="return confirmDeletion('заявку №{{ r.id }}');">
+                <button type="submit" class="link-action link-danger">Удалить</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="9" class="table-empty">Список заявок пуст.</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

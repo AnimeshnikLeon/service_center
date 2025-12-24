@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Учет заявок на ремонт{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+<header class="app-header">
+    <div class="app-logo">
+        <img src="/static/logo.svg" alt="Логотип">
+    </div>
+    <div class="app-title">
+        <h1>ООО «БытСервис» — сервисный модуль</h1>
+        <span>Учет заявок на ремонт бытовой техники</span>
+    </div>
+
+    {% if user %}
+    <div class="user-chip">
+        <span>Пользователь: <strong>{{ user.fio }}</strong></span>
+        <span>Роль: <strong>{{ role }}</strong></span>
+        <a class="link-action" href="/ui/logout">Выйти</a>
+    </div>
+    {% endif %}
+</header>
+
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <nav class="sidebar-nav" aria-label="Главное меню">
+            <a href="/ui/requests"
+               class="nav-link{% if active_page == 'requests' %} nav-link-active{% endif %}">
+                Заявки
+            </a>
+
+            {% if user and (role == "Менеджер по качеству" or role == "Менеджер") %}
+            <a href="/ui/quality"
+               class="nav-link{% if active_page == 'quality' %} nav-link-active{% endif %}">
+                Контроль качества
+            </a>
+            {% endif %}
+
+            {% if user and (role == "Менеджер") %}
+            <a href="/ui/users"
+               class="nav-link{% if active_page == 'users' %} nav-link-active{% endif %}">
+                Пользователи
+            </a>
+            <a href="/ui/statistics"
+               class="nav-link{% if active_page == 'statistics' %} nav-link-active{% endif %}">
+                Статистика
+            </a>
+            {% endif %}
+
+            {% if not user %}
+            <a href="/ui/login"
+               class="nav-link{% if active_page == 'login' %} nav-link-active{% endif %}">
+                Вход
+            </a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="app-main">
+        {% if messages %}
+        <section class="alert-container" aria-live="polite">
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.type }}">
+                <div class="alert-icon" aria-hidden="true"></div>
+                <div class="alert-body">
+                    <div class="alert-title">{{ msg.title }}</div>
+                    <div class="alert-text">{{ msg.text }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<footer class="app-footer">
+    <span>© 2026 Сервисный центр «IT‑Сфера»</span>
+</footer>
+
+<script>
+    function confirmDeletion(entityDescription) {
+        const text = "Вы действительно хотите удалить " + entityDescription + "?\n"
+            + "Операция необратима.";
+        return window.confirm(text);
+    }
+</script>
+</body>
+</html>

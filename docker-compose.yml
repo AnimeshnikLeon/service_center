@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: appliance_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./db/reports.sql:/docker-entrypoint-initdb.d/02-reports.sql:ro
+      - ./db/security.sql:/docker-entrypoint-initdb.d/03-security.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile.app
+    container_name: appliance_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  importer:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile.importer
+    container_name: appliance_importer
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data:ro
+    command: ["python", "import_data.py"]
+
+volumes:
+  db_data:

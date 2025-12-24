@@ -1,0 +1,90 @@
+erDiagram
+    USER_ROLE ||--o{ APP_USER : has
+    REQUEST_STATUS ||--o{ REPAIR_REQUEST : status
+    EQUIPMENT_TYPE ||--o{ EQUIPMENT_MODEL : contains
+    EQUIPMENT_MODEL ||--o{ REPAIR_REQUEST : used_in
+    ISSUE_TYPE ||--o{ REPAIR_REQUEST : classifies
+
+    APP_USER ||--o{ REPAIR_REQUEST : client
+    APP_USER ||--o{ REPAIR_REQUEST : master
+
+    REPAIR_REQUEST ||--o{ REQUEST_COMMENT : has
+    APP_USER ||--o{ REQUEST_COMMENT : writes
+
+    SPARE_PART ||--o{ REQUEST_SPARE_PART : includes
+    REPAIR_REQUEST ||--o{ REQUEST_SPARE_PART : uses
+
+    USER_ROLE {
+        int id PK
+        string name UK
+    }
+
+    APP_USER {
+        int id PK
+        string fio
+        string phone
+        string login UK
+        string password_hash
+        int role_id FK
+    }
+
+    REQUEST_STATUS {
+        int id PK
+        string name UK
+        boolean is_final
+    }
+
+    EQUIPMENT_TYPE {
+        int id PK
+        string name UK
+    }
+
+    EQUIPMENT_MODEL {
+        int id PK
+        int equipment_type_id FK
+        string name
+        "UK(equipment_type_id, name)" ""
+    }
+
+    ISSUE_TYPE {
+        int id PK
+        string name UK
+    }
+
+    REPAIR_REQUEST {
+        int id PK
+        date start_date
+        int equipment_model_id FK
+        int issue_type_id FK
+        string problem_description
+        int status_id FK
+        date completion_date
+        date due_date
+        string repair_parts_legacy
+        int master_id FK
+        int client_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    REQUEST_COMMENT {
+        int id PK
+        int request_id FK
+        int master_id FK
+        string message
+        datetime created_at
+    }
+
+    SPARE_PART {
+        int id PK
+        string name UK
+    }
+
+    REQUEST_SPARE_PART {
+        int id PK
+        int request_id FK
+        int spare_part_id FK
+        int quantity
+        string note
+        "UK(request_id, spare_part_id)" ""
+    }

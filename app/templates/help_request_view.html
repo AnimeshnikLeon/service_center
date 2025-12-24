@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Запрос помощи №{{ help_req.id }}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h2 class="page-title">Запрос помощи №{{ help_req.id }}</h2>
+    <div>
+        <a href="/ui/quality" class="btn btn-secondary">Назад</a>
+        <a href="/ui/requests/{{ req.id }}" class="btn btn-secondary">К заявке</a>
+    </div>
+</header>
+
+<section class="form-card" style="margin-bottom: 16px;">
+    <div class="kv-grid">
+        <div class="kv-key">Заявка</div>
+        <div class="kv-val">№{{ req.id }}</div>
+
+        <div class="kv-key">Создал</div>
+        <div class="kv-val">{{ help_req.created_by_master.fio }}</div>
+
+        <div class="kv-key">Дата</div>
+        <div class="kv-val">{{ help_req.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
+
+        <div class="kv-key">Сообщение</div>
+        <div class="kv-val">{{ help_req.message }}</div>
+
+        <div class="kv-key">Предлагаемый срок</div>
+        <div class="kv-val">{% if help_req.proposed_due_date %}{{ help_req.proposed_due_date }}{% else %}—{% endif %}</div>
+
+        <div class="kv-key">Текущий срок заявки</div>
+        <div class="kv-val">{% if req.due_date %}{{ req.due_date }}{% else %}—{% endif %}</div>
+
+        <div class="kv-key">Текущий исполнитель</div>
+        <div class="kv-val">{% if req.master %}{{ req.master.fio }}{% else %}—{% endif %}</div>
+    </div>
+</section>
+
+<form method="post" action="/ui/help/{{ help_req.id }}/close" class="form-card" novalidate>
+    <h3 style="margin-top: 0;">Обработка запроса</h3>
+
+    <div class="form-row">
+        <label for="assigned_master_id">Привлечь мастера / назначить исполнителя</label>
+        <select id="assigned_master_id" name="assigned_master_id">
+            <option value="">— не менять —</option>
+            {% for m in masters %}
+            <option value="{{ m.id }}" {% if form_data.assigned_master_id == m.id %}selected{% endif %}>
+                {{ m.fio }}
+            </option>
+            {% endfor %}
+        </select>
+        <div class="field-help">
+            Допускается переназначение исполнителя, если требуется привлечь другого мастера.
+        </div>
+    </div>
+
+    <div class="form-row{% if field_errors.new_due_date %} has-error{% endif %}">
+        <label for="new_due_date">Продлить срок выполнения</label>
+        <input id="new_due_date" name="new_due_date" type="date" value="{{ form_data.new_due_date or '' }}">
+        {% if field_errors.new_due_date %}
+        <div class="field-error">{{ field_errors.new_due_date }}</div>
+        {% endif %}
+        <div class="field-help">
+            Устанавливается после согласования с заказчиком.
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="resolution_note">Комментарий / результат</label>
+        <textarea id="resolution_note" name="resolution_note">{{ form_data.resolution_note or '' }}</textarea>
+        <div class="field-help">Коротко зафиксируйте принятое решение.</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Закрыть запрос</button>
+    </div>
+</form>
+{% endblock %}

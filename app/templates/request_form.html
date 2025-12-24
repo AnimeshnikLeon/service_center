@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if is_edit %}Редактирование заявки{% else %}Новая заявка{% endif %}
+{% endblock %}
+
+{% block content %}
+<h2 class="page-title">
+    {% if is_edit %}Редактирование заявки №{{ form_data.id }}{% else %}Новая заявка{% endif %}
+</h2>
+
+<form method="post" action="/ui/requests/save" class="form-card" novalidate>
+    <input type="hidden" name="id" value="{{ form_data.id or '' }}"/>
+
+    <div class="form-row{% if field_errors.start_date %} has-error{% endif %}">
+        <label for="start_date">Дата добавления <span class="required">*</span></label>
+        <input id="start_date" name="start_date" type="date" required value="{{ form_data.start_date or '' }}">
+        {% if field_errors.start_date %}
+        <div class="field-error">{{ field_errors.start_date }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.equipment_type_id %} has-error{% endif %}">
+        <label for="equipment_type_id">Тип техники <span class="required">*</span></label>
+        <select id="equipment_type_id" name="equipment_type_id" required>
+            <option value="">— выберите —</option>
+            {% for e in equipment_types %}
+            <option value="{{ e.id }}" {% if form_data.equipment_type_id == e.id %}selected{% endif %}>
+                {{ e.name }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if field_errors.equipment_type_id %}
+        <div class="field-error">{{ field_errors.equipment_type_id }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.equipment_model_name %} has-error{% endif %}">
+        <label for="equipment_model_name">Модель <span class="required">*</span></label>
+        <input id="equipment_model_name" name="equipment_model_name" type="text" maxlength="200" required
+               value="{{ form_data.equipment_model_name or '' }}">
+        {% if field_errors.equipment_model_name %}
+        <div class="field-error">{{ field_errors.equipment_model_name }}</div>
+        {% endif %}
+        <div class="field-help">Модель сохраняется как справочник (нормализация), можно вводить текстом.</div>
+    </div>
+
+    <div class="form-row">
+        <label for="issue_type_id">Тип неисправности</label>
+        <select id="issue_type_id" name="issue_type_id">
+            <option value="">— авто (по тексту проблемы) —</option>
+            {% for it in issue_types %}
+            <option value="{{ it.id }}" {% if form_data.issue_type_id == it.id %}selected{% endif %}>
+                {{ it.name }}
+            </option>
+            {% endfor %}
+        </select>
+        <div class="field-help">Если не выбрать, тип неисправности будет создан/подобран автоматически из текста «Описание проблемы».</div>
+    </div>
+
+    <div class="form-row{% if field_errors.problem_description %} has-error{% endif %}">
+        <label for="problem_description">Описание проблемы <span class="required">*</span></label>
+        <textarea id="problem_description" name="problem_description" required>{{ form_data.problem_description or '' }}</textarea>
+        {% if field_errors.problem_description %}
+        <div class="field-error">{{ field_errors.problem_description }}</div>
+        {% endif %}
+    </div>
+
+    {% if role == "Заказчик" %}
+    <div class="form-row">
+        <label for="status_readonly">Статус</label>
+        {% set current_status = (statuses | selectattr('id', 'equalto', form_data.status_id) | list | first) %}
+        <input id="status_readonly" type="text" disabled
+               value="{% if is_edit and current_status %}{{ current_status.name }}{% else %}Новая заявка{% endif %}">
+        <div class="field-help">
+            Для роли «Заказчик» статус заявки назначается сотрудниками сервисного центра.
+        </div>
+    </div>
+    {% else %}
+    <div class="form-row{% if field_errors.status_id %} has-error{% endif %}">
+        <label for="status_id">Статус <span class="required">*</span></label>
+        <select id="status_id" name="status_id" required>
+            <option value="">— выберите —</option>
+            {% for s in statuses %}
+            <option value="{{ s.id }}" {% if form_data.status_id == s.id %}selected{% endif %}>
+                {{ s.name }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if field_errors.status_id %}
+        <div class="field-error">{{ field_errors.status_id }}</div>
+        {% endif %}
+        <div class="field-help">Если выбран финальный статус, дата завершения будет заполнена автоматически при пустом поле.</div>
+    </div>
+    {% endif %}
+
+    <div class="form-row{% if field_errors.completion_date %} has-error{% endif %}">
+        <label for="completion_date">Дата завершения</label>
+        <input id="completion_date" name="completion_date" type="date" value="{{ form_data.completion_date or '' }}">
+        {% if field_errors.completion_date %}
+        <div class="field-error">{{ field_errors.completion_date }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row">
+        <label for="due_date">Плановый срок выполнения</label>
+        {% if role in ["Менеджер", "Оператор", "Менеджер по качеству"] %}
+            <input id="due_date" name="due_date" type="date" value="{{ form_data.due_date or '' }}">
+            <div class="field-help">
+                Менеджер по качеству может продлевать срок выполнения заявки по согласованию с заказчиком.
+            </div>
+        {% else %}
+            <input id="due_date" type="date" value="{{ form_data.due_date or '' }}" disabled>
+            <div class="field-help">
+                Плановый срок устанавливается сотрудниками сервисной службы.
+            </div>
+        {% endif %}
+    </div>
+
+    {% if role in ["Менеджер", "Оператор", "Мастер", "Специалист"] %}
+    <div class="form-row">
+        <label for="repair_parts">Комплектующие / запчасти</label>
+        <textarea id="repair_parts" name="repair_parts">{{ form_data.repair_parts or '' }}</textarea>
+        <div class="field-help">Сюда мастер может занести заказанные/использованные комплектующие.</div>
+    </div>
+    {% else %}
+    <div class="form-row">
+        <label>Комплектующие / запчасти</label>
+        <textarea disabled>Поле заполняется мастером по результатам ремонта.</textarea>
+        <div class="field-help">Информация доступна для просмотра заказчику после проведения работ.</div>
+    </div>
+    {% endif %}
+
+    <div class="form-row">
+        <label for="master_id">Исполнитель (мастер)</label>
+
+        {% if role in ["Менеджер", "Оператор", "Менеджер по качеству"] %}
+            <select id="master_id" name="master_id">
+                <option value="">— не назначен —</option>
+                {% for s in specialists %}
+                <option value="{{ s.id }}" {% if form_data.master_id == s.id %}selected{% endif %}>
+                    {{ s.fio }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="field-help">Исполнитель назначается менеджером, оператором или менеджером по качеству.</div>
+
+        {% elif role in ["Мастер", "Специалист"] and is_edit and form_data.master_id %}
+            <input type="hidden" name="master_id" value="{{ form_data.master_id }}">
+            {% for s in specialists %}
+                {% if s.id == form_data.master_id %}
+                    <input type="text" disabled value="{{ s.fio }}">
+                {% endif %}
+            {% endfor %}
+            <div class="field-help">Мастер не может переназначать заявку на другого исполнителя.</div>
+
+        {% else %}
+            {% set current_master = (specialists | selectattr('id', 'equalto', form_data.master_id) | list | first) %}
+            <input type="text" disabled
+                   value="{% if current_master %}{{ current_master.fio }}{% else %}Не назначен{% endif %}">
+            <div class="field-help">
+                Исполнитель будет назначен сотрудником сервисной службы.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.client_id %} has-error{% endif %}">
+        <label for="client_id">Заказчик <span class="required">*</span></label>
+
+        {% if role == "Заказчик" %}
+            <input type="hidden" name="client_id" value="{{ form_data.client_id }}">
+            <input type="text" disabled value="{{ user.fio }}">
+            <div class="field-help">Для роли «Заказчик» заказчик фиксируется автоматически.</div>
+        {% else %}
+            <select id="client_id" name="client_id" required>
+                <option value="">— выберите —</option>
+                {% for c in clients %}
+                <option value="{{ c.id }}" {% if form_data.client_id == c.id %}selected{% endif %}>
+                    {{ c.fio }}
+                </option>
+                {% endfor %}
+            </select>
+        {% endif %}
+
+        {% if field_errors.client_id %}
+        <div class="field-error">{{ field_errors.client_id }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-actions">
+        <a href="/ui/requests" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">
+            {% if is_edit %}Сохранить{% else %}Создать{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %} 

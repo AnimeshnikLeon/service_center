@@ -1,0 +1,103 @@
+erDiagram
+    USER_ROLE ||--o{ APP_USER : "role_id"
+    REQUEST_STATUS ||--o{ REPAIR_REQUEST : "status_id"
+    EQUIPMENT_TYPE ||--o{ EQUIPMENT_MODEL : "equipment_type_id"
+    EQUIPMENT_MODEL ||--o{ REPAIR_REQUEST : "equipment_model_id"
+    ISSUE_TYPE ||--o{ REPAIR_REQUEST : "issue_type_id"
+    APP_USER ||--o{ REPAIR_REQUEST : "client_id"
+    APP_USER ||--o{ REPAIR_REQUEST : "master_id"
+    REPAIR_REQUEST ||--o{ REQUEST_COMMENT : "request_id"
+    APP_USER ||--o{ REQUEST_COMMENT : "master_id"
+    REPAIR_REQUEST ||--o{ REQUEST_SPARE_PART : "request_id"
+    SPARE_PART ||--o{ REQUEST_SPARE_PART : "spare_part_id"
+    REPAIR_REQUEST ||--o{ HELP_REQUEST : "request_id"
+    APP_USER ||--o{ HELP_REQUEST : "created_by_master_id"
+    APP_USER ||--o{ HELP_REQUEST : "quality_manager_id"
+    APP_USER ||--o{ HELP_REQUEST : "assigned_master_id"
+
+    USER_ROLE {
+        int id PK
+        string name UK
+    }
+
+    APP_USER {
+        int id PK
+        string fio
+        string phone
+        string login UK
+        string password_hash
+        int role_id FK
+    }
+
+    REQUEST_STATUS {
+        int id PK
+        string name UK
+        boolean is_final
+    }
+
+    EQUIPMENT_TYPE {
+        int id PK
+        string name UK
+    }
+
+    EQUIPMENT_MODEL {
+        int id PK
+        int equipment_type_id FK
+        string name
+    }
+
+    ISSUE_TYPE {
+        int id PK
+        string name UK
+    }
+
+    REPAIR_REQUEST {
+        int id PK
+        date start_date
+        int equipment_model_id FK
+        int issue_type_id FK
+        text problem_description
+        int status_id FK
+        date completion_date
+        date due_date
+        text repair_parts
+        int master_id FK
+        int client_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    REQUEST_COMMENT {
+        int id PK
+        int request_id FK
+        int master_id FK
+        text message
+        datetime created_at
+    }
+
+    SPARE_PART {
+        int id PK
+        string name UK
+    }
+
+    REQUEST_SPARE_PART {
+        int id PK
+        int request_id FK
+        int spare_part_id FK
+        int quantity
+        text note
+    }
+
+    HELP_REQUEST {
+        int id PK
+        int request_id FK
+        int created_by_master_id FK
+        int quality_manager_id FK
+        int assigned_master_id FK
+        string status
+        text message
+        text resolution_note
+        date proposed_due_date
+        datetime created_at
+        datetime closed_at
+    }

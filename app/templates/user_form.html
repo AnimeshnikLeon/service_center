@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if is_edit %}Редактирование пользователя{% else %}Новый пользователь{% endif %}
+{% endblock %}
+
+{% block content %}
+<h2 class="page-title">
+    {% if is_edit %}Редактирование пользователя №{{ form_data.id }}{% else %}Новый пользователь{% endif %}
+</h2>
+
+<form method="post" action="/ui/users/save" class="form-card" novalidate>
+    <input type="hidden" name="id" value="{{ form_data.id or '' }}"/>
+
+    <div class="form-row{% if field_errors.fio %} has-error{% endif %}">
+        <label for="fio">ФИО <span class="required">*</span></label>
+        <input id="fio" name="fio" type="text" required value="{{ form_data.fio or '' }}">
+        {% if field_errors.fio %}
+        <div class="field-error">{{ field_errors.fio }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.phone %} has-error{% endif %}">
+        <label for="phone">Телефон <span class="required">*</span></label>
+        <input id="phone" name="phone" type="text" required value="{{ form_data.phone or '' }}">
+        {% if field_errors.phone %}
+        <div class="field-error">{{ field_errors.phone }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.login %} has-error{% endif %}">
+        <label for="login">Логин <span class="required">*</span></label>
+        <input id="login" name="login" type="text" required value="{{ form_data.login or '' }}">
+        {% if field_errors.login %}
+        <div class="field-error">{{ field_errors.login }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.role_id %} has-error{% endif %}">
+        <label for="role_id">Роль <span class="required">*</span></label>
+        <select id="role_id" name="role_id" required>
+            <option value="">— выберите —</option>
+            {% for r in roles %}
+            <option value="{{ r.id }}" {% if form_data.role_id == r.id %}selected{% endif %}>
+                {{ r.name }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if field_errors.role_id %}
+        <div class="field-error">{{ field_errors.role_id }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.password %} has-error{% endif %}">
+        <label for="password">
+            Пароль{% if not is_edit %} <span class="required">*</span>{% endif %}
+        </label>
+        <input id="password" name="password" type="password" autocomplete="new-password">
+        {% if is_edit %}
+        <div class="field-help">Оставьте поле пустым, чтобы не менять пароль.</div>
+        {% endif %}
+        {% if field_errors.password %}
+        <div class="field-error">{{ field_errors.password }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-row{% if field_errors.password_repeat %} has-error{% endif %}">
+        <label for="password_repeat">Подтверждение пароля</label>
+        <input id="password_repeat" name="password_repeat" type="password" autocomplete="new-password">
+        {% if field_errors.password_repeat %}
+        <div class="field-error">{{ field_errors.password_repeat }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-actions">
+        <a href="/ui/users" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">
+            {% if is_edit %}Сохранить{% else %}Создать{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}

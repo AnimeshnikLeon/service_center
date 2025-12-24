@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Запрос помощи{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h2 class="page-title">Запрос помощи по заявке №{{ req.id }}</h2>
+    <div>
+        <a href="/ui/requests/{{ req.id }}" class="btn btn-secondary">Назад</a>
+    </div>
+</header>
+
+<form method="post" action="/ui/requests/{{ req.id }}/help/create" class="form-card" novalidate>
+    <div class="form-row{% if field_errors.message %} has-error{% endif %}">
+        <label for="message">Описание проблемы / что требуется <span class="required">*</span></label>
+        <textarea id="message" name="message" required>{{ form_data.message or '' }}</textarea>
+        {% if field_errors.message %}
+        <div class="field-error">{{ field_errors.message }}</div>
+        {% endif %}
+        <div class="field-help">Например: требуется консультация, нет запчастей, ремонт невозможен без участия другого мастера.</div>
+    </div>
+
+    <div class="form-row{% if field_errors.proposed_due_date %} has-error{% endif %}">
+        <label for="proposed_due_date">Предлагаемый новый срок</label>
+        <input id="proposed_due_date" name="proposed_due_date" type="date" value="{{ form_data.proposed_due_date or '' }}">
+        {% if field_errors.proposed_due_date %}
+        <div class="field-error">{{ field_errors.proposed_due_date }}</div>
+        {% endif %}
+        <div class="field-help">Если требуется продление срока, укажите предлагаемую дату (для согласования с заказчиком).</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Отправить запрос</button>
+    </div>
+</form>
+{% endblock %}

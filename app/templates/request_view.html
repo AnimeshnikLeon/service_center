@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Заявка №{{ req.id }}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h2 class="page-title">Заявка №{{ req.id }}</h2>
+    <div>
+        <a href="/ui/requests" class="btn btn-secondary">Назад к списку</a>
+        {% if can_edit %}
+        <a href="/ui/requests/{{ req.id }}/edit" class="btn btn-primary">Редактировать</a>
+        {% endif %}
+    </div>
+</header>
+
+<section class="form-card" style="margin-bottom: 16px;">
+    <div class="kv-grid">
+        <div class="kv-key">Дата добавления</div>
+        <div class="kv-val">{{ req.start_date }}</div>
+
+        <div class="kv-key">Тип техники</div>
+        <div class="kv-val">{{ req.equipment_model.equipment_type.name }}</div>
+
+        <div class="kv-key">Модель</div>
+        <div class="kv-val">{{ req.equipment_model.name }}</div>
+
+        <div class="kv-key">Тип неисправности</div>
+        <div class="kv-val">{{ req.issue_type.name }}</div>
+
+        <div class="kv-key">Описание проблемы</div>
+        <div class="kv-val">{{ req.problem_description }}</div>
+
+        <div class="kv-key">Статус</div>
+        <div class="kv-val">{{ req.status.name }}</div>
+
+        <div class="kv-key">Дата завершения</div>
+        <div class="kv-val">{% if req.completion_date %}{{ req.completion_date }}{% else %}—{% endif %}</div>
+
+        <div class="kv-key">Плановый срок выполнения</div>
+        <div class="kv-val">
+            {% if req.due_date %}
+                {{ req.due_date }}
+            {% else %}
+                —
+            {% endif %}
+        </div>
+
+        <div class="kv-key">Комплектующие / запчасти</div>
+        <div class="kv-val">{% if req.repair_parts %}{{ req.repair_parts }}{% else %}—{% endif %}</div>
+
+        <div class="kv-key">Исполнитель (мастер)</div>
+        <div class="kv-val">{% if req.master %}{{ req.master.fio }}{% else %}—{% endif %}</div>
+
+        <div class="kv-key">Заказчик</div>
+        <div class="kv-val">{{ req.client.fio }} ({{ req.client.phone }})</div>
+    </div>
+
+    {% if help_open %}
+    <div class="alert alert-warning" style="margin-top: 12px;">
+        <div class="alert-icon" aria-hidden="true"></div>
+        <div class="alert-body">
+            <div class="alert-title">Открыт запрос помощи</div>
+            <div class="alert-text">
+                Запрос №{{ help_open.id }} от {{ help_open.created_at.strftime("%Y-%m-%d %H:%M") }}.
+                Менеджер по качеству обработает его в разделе «Контроль качества».
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if can_create_help and not help_open %}
+    <div class="form-actions" style="justify-content: flex-start;">
+        <a class="btn btn-secondary" href="/ui/requests/{{ req.id }}/help/new">Запросить помощь</a>
+    </div>
+    {% endif %}
+
+    {% if can_delete %}
+    <div class="form-actions" style="justify-content: flex-start;">
+        <form method="post"
+              action="/ui/requests/{{ req.id }}/delete"
+              class="inline-form"
+              onsubmit="return confirmDeletion('заявку №{{ req.id }}');">
+            <button type="submit" class="btn btn-secondary" style="border-color: #b91c1c; color: #b91c1c;">
+                Удалить заявку
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</section>
+
+<section class="form-card" style="margin-bottom: 16px;">
+    <h3 style="margin-top: 0;">Комментарии мастера</h3>
+
+    {% for c in comments %}
+    <div class="comment-box">
+        <div class="comment-meta">
+            {{ c.master.fio }} · {{ c.created_at.strftime("%Y-%m-%d %H:%M") }}
+        </div>
+        <div class="comment-text">{{ c.message }}</div>
+    </div>
+    {% else %}
+    <div class="field-help">Комментариев пока нет.</div>
+    {% endfor %}
+
+    {% if can_add_comment %}
+    <form method="post" action="/ui/requests/{{ req.id }}/comment" style="margin-top: 12px;">
+        <div class="form-row">
+            <label for="message">Добавить комментарий</label>
+            <textarea id="message" name="message" required></textarea>
+            <div class="field-help">Комментарий будет виден в карточке заявки.</div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить комментарий</button>
+        </div>
+    </form>
+    {% endif %}
+</section>
+
+<section class="form-card">
+    <h3 style="margin-top: 0;">Оценка качества работы</h3>
+    <p class="field-help">
+        Отсканируйте QR‑код, чтобы перейти к форме оценки работы сервисного центра.
+    </p>
+    <img src="/ui/requests/{{ req.id }}/qr"
+         alt="QR-код для оценки качества работы"
+         style="width: 200px; height: 200px;">
+</section>
+{% endblock %}

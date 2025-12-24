@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h2 class="page-title">Вход в систему</h2>
+</header>
+
+<form method="post" action="/ui/login" class="form-card" novalidate>
+    <div class="form-row">
+        <label for="login">Логин <span class="required">*</span></label>
+        <input id="login" name="login" type="text" autocomplete="username" required value="{{ form_data.login or '' }}">
+        <div class="field-help">Используйте логин из списка пользователей.</div>
+    </div>
+
+    <div class="form-row">
+        <label for="password">Пароль <span class="required">*</span></label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required value="">
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Войти</button>
+    </div>
+</form>
+{% endblock %}
